@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cocomic - Detail</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/cocomic/client/css/style.css">
+    <script src="/cocomic/client/js/path.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authUser.js"></script>
+    
+    
+</head>
+<script>
+
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+    var orderBy = 'ASC';
+  $(document).ready(function(){
+    GetUserDetail();
+    GetListLike();
+    GetListFollow();
+    GetListComment();
+
+    $('#LikeShow').click(function(){
+      $('#table').html(
+        `
+            <div class="tag-title">
+              <span >LIST LIKE</span>
+            </div>
+            <div class="background-content">
+              <div class="cards" id="comic-card">
+              </div>
+            </div>
+        `
+      );
+      GetListLike();
+    })
+
+    $('#FollowShow').click(function(){
+      $('#table').html(
+        `
+            <div class="tag-title">
+              <span >LIST FOLLOW</span>
+            </div>
+            <div class="background-content">
+              <div class="cards" id="comic-card">
+              </div>
+            </div>
+        `
+      );
+      GetListFollow();
+    })
+
+    $('#CommentShow').click(function(){
+      $('#table').html(
+        `
+        <div class="tag-title">
+              <span >LIST COMMENT</span>
+            </div>
+            <div class="background-content">
+              <div style='overflow-y: scroll;'>
+                <table class="table table-striped" >
+                  <thead >
+                    <tr>
+                      <th>STT</th>
+                      <th style="width:10%">ComicName</th>
+                      <th style="width:40%">Comment</th>
+                      <th>CommentDate</th>
+                      <th>Option</th>
+                    </tr>
+                  </thead>
+                  <div>
+                  <tbody id="ListComment">
+                    
+                  </tbody>
+                  </div>
+                </table>
+              </div>
+            </div>
+        `
+      );
+      GetListComment();
+    })
+  
+  });
+
+
+  function GetUserDetail(){
+      $('#UserManagement').html(
+        `
+        <div class="row">
+          <div class="col-sm-3 col-12 text-center"><img class="ComicImage" alt="tweetImg" src="${account.Avatar}"></div>
+          <div class="col-sm-7 col-10" style="padding-top:12px">
+            <p ><span class="text-title">UserName : </span>${account.UserName}</p>
+            <p ><span class="text-title">UserEmail : </span>${account.Email}</p>
+            <p ><span class="text-title">CreateDate : </span>${account.CreateDate}</p>
+          </div>
+          <div class="col-2" style="padding-top:12px">
+            
+            <a href="/cocomic/client/homepage/account/edit.html"  type="button"  class="btn btn-warning" style="width:50px" id="EditBtn">
+              <svg xmlns="http://www.w3.org/2000/svg"    fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16" >
+                <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+              </svg>
+            </a>
+          </div>
+            
+        </div>
+        <p></p>
+        `
+      )
+  }
+
+  function GetComicCard(item) {
+        var comicCard = `
+            <li class="card" >
+                  <a class="card-image" href="/cocomic/client/homepage/comicdetail.html?comic-id=${item.ComicID}" style="background-image: url(${item.ComicImage});"></a>
+                <div class="card-body">
+                <div class="card-title wrap-text">${item.ComicName}</div>
+                </div>
+                </div>
+            </li>
+        `
+        render(comicCard);
+    }
+
+    function render(comicCard){
+    $('#comic-card').append(
+            comicCard
+        )
+  }
+
+  function GetListLike(){
+    $.ajax({  
+    url: ROOT + "/server/controllers/likeComic.php",
+    type: 'get',
+    data: {
+      'list-like':1,
+      'user-id': account.UserID,
+    },
+    success:function(data)  
+    {  
+      var obj = JSON.parse(data);
+      $('#LikeNo').html(obj.Likes.length);
+      $('#ListLike').empty();
+      obj.Likes.forEach(GetComicCard);
+    }  
+  });
+  }
+  function GetListComment(){
+    $.ajax({  
+    url: ROOT + "/server/controllers/comment.php",
+    type: 'get',
+    data: {
+      'list-comment':1,
+      'UserID': account.UserID,
+    },
+    success:function(data)  
+    {  
+      var obj = JSON.parse(data);
+      $('#CommentNo').html(obj.Comments.length);
+      $('#ListComment').empty();
+        for(i=0;i<obj.Comments.length;i++) {
+          var comment = `
+            <tr>
+              <td>${i+1}</td>
+              <td>${obj.Comments[i].ComicName}</td>
+              <td>${obj.Comments[i].Comment}</td>
+              <td>${obj.Comments[i].CommentDate}</td>
+              <td>
+                <input onclick="DeleteComment(${obj.Comments[i].ID})" type="button"  class="btn btn-danger" value="Delete">
+              </td>
+              <td>
+                <a class="btn btn-success" href="/cocomic/client/homepage/comicdetail.html?comic-id=${obj.Comments[i].ComicID}" role="button">More</a>
+              </td>
+              
+            </tr>
+          `;
+          $('#ListComment').append(
+            comment
+          )
+        }
+      
+    }  
+  });
+  }
+  function GetListFollow(){
+    $.ajax({  
+    url: ROOT + "/server/controllers/followComic.php",
+    type: 'get',
+    data: {
+      'list-follow':1,
+      'user-id': account.UserID,
+    },
+    success:function(data)  
+    {  
+      var obj = JSON.parse(data);
+      $('#FollowNo').html(obj.Follows.length);
+      $('#ListFollow').empty();
+      obj.Follows.forEach(GetComicCard);
+      
+    }  
+  });
+  }
+
+
+  function DeleteComment(id){
+    var check = confirm("Are you sure you want to delete comment '" + id+"'");
+    if(check){
+    $.ajax({  
+    url: ROOT + "/server/controllers/comment.php",
+    type: 'delete',
+    async: false,
+    data: {
+      'delete-comment':1,
+      'ID': id,
+    },
+    success:function(data)  
+    {  
+      GetListComment();
+    }  
+  });
+  }
+}
+  
+  
+  
+</script>
+
+
+<div class="modal container-fluid" id="myModal">
+  <div class="modal-dialog modal-lg" id="modalContent">
+    
+  </div>
+</div>
+<div class="space-nav"></div>
+
+
+
+<div class="row ">
+    <div class="content">
+      <div class="dashboard">
+        <div class="tag-title">
+          <span >USER DETAIL</span>
+        </div>
+      </div>
+      <div class="background-content">
+        <div class="main-content">
+          <div id="UserManagement">
+              
+          </div>
+  
+          <div class="dashboard">
+            <div class="row" style="padding:12px">
+              <div class="col-md-3 col-6" style="padding: 0 10px;" id="LikeShow">
+                <div class="card text-dark bg-light" >
+                  <div class="card-header ">
+                    <p class="text-title text-center" style="color: #3b5998" >Like No</p>
+                    <div class="text-title text-center" style="color: #3b5998" id="LikeNo">0</div>
+  
+                  </div>
+                  <div class="card-body">
+                    <div class="card-text text-center" >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="#3b5998" class="bi bi-hand-thumbs-up-fill" viewBox="0 0 16 16">
+                        <path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a9.84 9.84 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733.058.119.103.242.138.363.077.27.113.567.113.856 0 .289-.036.586-.113.856-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.163 3.163 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.82 4.82 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6" style="padding: 0 10px;" id="FollowShow">
+                <div class="card text-dark bg-light" >
+                  <div class="card-header ">
+                    <p class="text-title text-center" style="color: green" >Follow No</p>
+                    <div class="text-title text-center" style="color: green" id="FollowNo">0</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="card-text text-center" >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6" style="padding: 0 10px;" id = "CommentShow">
+                <div class="card text-dark bg-light" >
+                  <div class="card-header ">
+                    <p class="text-title text-center" style="color: orange" >Comment No</p>
+                    <div class="text-title text-center" style="color: orange" id="CommentNo">0</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="card-text text-center" >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-chat-left-text-fill" viewBox="0 0 16 16">
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A.5.5 0 0 1 0 14.793V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+            
+          </div>
+          <p></p>
+          <div id="table">
+
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+</div>
+
+
+
+<footer class="text-center text-lg-start">
+
+</footer>
+
+
+</html>
+
+

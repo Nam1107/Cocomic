@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sign Up Form by Colorlib</title>
+    
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/cocomic/client/css/style.css">
+    <script src="/cocomic/client/js/path.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authAdmin.js"></script>
+    <script type="module" src="/cocomic/client/js/firebaseConnect.js"></script>
+    <script type="text/javascript" src="/cocomic/client/js/uploadImg.js"></script>
+    <script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+    <link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet"/>
+
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/sidebar.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('.sidebar').html(data);
+  });
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+      $(document).ready(function(){
+        $.ajax({  
+            url: ROOT + "/server/controllers/comics.php",
+            async: true,
+            data:{
+              'list-tags': 1,
+
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              var tags = obj.Tags;
+              for(var i=0;i<tags.length;i++){
+              $('#Tags').append(
+                `
+                <option value="${tags[i]['TagsName']}" >${tags[i]['TagsName']}</option>
+                `
+              );
+            }
+            }  
+        });
+      })
+      async function upday(){
+        $("#loading").show();
+          var fileImg = document.getElementById('ComicImage').files;
+          var fileThumb = document.getElementById('ComicThumb').files;
+          var img = await upload(fileImg[0],'ComicImage');
+          var thumb = await upload(fileThumb[0],'ComicThumb');
+          $.post(ROOT + "/server/controllers/comics.php",{
+                'add-comic' : 1,
+                'ComicName' : $("[name=ComicName]").val(),
+                'AnotherName' : $("[name=AnotherName]").val(),
+                'ComicDescription' : $("[name=ComicDescription]").val(),
+                'Author' :$("[name=Author]").val(),
+                'ComicImage' :img,
+                'ComicThumb' :thumb,
+                'ComicName' :$("[name=ComicName]").val(),
+                'Status': document.getElementById("Status").value,
+                'Tags' : $('#Tags').val(),
+                'IsPublic' :$("[name=IsPublic]").prop('checked'),
+              },function(data)  
+              {  
+                var obj = JSON.parse(data);
+                $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Success</div>
+                    `
+                  );
+                
+                setTimeout(function() {
+                  window.open(ROOT + "/client/CMS/comics/detail.html?comic-id="+obj.LastID,"_self");
+                  
+              },500);
+                
+          } )
+          
+          
+      }
+</script>
+<body>
+  <div id="loading" ><div id="loading_anim">
+    <div style="font-size:30px">Loading...</div>
+</div></div>
+
+<div class="space-nav"></div>
+<div class="sidebar">
+        
+</div>
+
+<div class="row">
+  <div class="container" style="width:70%">
+<div class="content" >
+  <div class="tag-title">
+    <span >CREATE NEW COMIC</span>
+  </div>
+    <div class="tag-title" style="font-size: 15px;">
+            <!-- <form method="POST"> -->
+              <form id="formInput">
+                <div class="mb-3">
+                    <label  class="form-label">Comic Name</label>
+                    <input type="text" class="form-control" name="ComicName"  placeholder="Comic Name"/>
+                </div>
+                <div class="mb-3">
+                    <label  class="form-label">Another Name</label>
+                    <input type="text" name="AnotherName" class="form-control" placeholder="Another Name" />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Author</label>
+                    <input type="text" name="Author" class="form-control"  placeholder="Author"/>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                  <select class="form-control" name="Status" id="Status" style="height:auto;width:auto" >
+                    <option value="OnGoing">OnGoing</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Tags</label>
+                  <select class="form-control" id="Tags" name="Tags" style="height:auto;width:auto">
+                    
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="IsPublic" class="form-check-label" style="padding-right: 15px;">IsPublic</label>
+                  <input type="checkbox" name="IsPublic" id="IsPublic" class="form-check-input" />
+                  
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Comic Image</label>
+                    <p></p>
+                    <!-- <input type="text" name="ComicImage" class="form-control" placeholder="Comic Image"/> -->
+                    <input type="file" class="form-control" style="width: 50%;" id="ComicImage" name="ComicImage" ><br><br>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Comic Thumb</label>
+                    <p></p>
+                    <!-- <input type="text" name="ComicThumb" class="form-control"  placeholder="Comic Thumb"/> -->
+                    <input type="file" class="form-control" style="width: 50%;" id="ComicThumb" name="ComicThumb" ><br><br>
+                </div>
+                <div class="mb-3">
+                  <label  class="form-label">Comic Description</label>
+                  <textarea rows="10" type="text" id="ComicDescription" class="form-control" name="ComicDescription" value=""  placeholder="comicDescription" ></textarea>
+              </div>
+                
+            </form>
+            <button onclick="upday()"    class="btn btn-primary">Create Comic</button>
+      
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+<footer class="text-center text-lg-start">
+
+</footer>
+</html>
+
+

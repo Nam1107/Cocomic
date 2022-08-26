@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sign Up Form by Colorlib</title>
+    
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/path.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authUser.js"></script>
+</head>
+
+<script>
+
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+<script type="text/javascript">
+    
+    $(function(){
+      $("[name=UserID]").val(account.UserID);
+      $("[name=UserName]").val(account.UserName);
+      $("[name=Email]").val(account.Email);
+      $('form').submit(function(){
+
+        $.post(ROOT + "/server/controllers/users.php",{
+                'update-user' : 1,
+                'UserID' : $("[name=UserID]").val(),
+                'UserName' : $("[name=UserName]").val(),
+                'Email' : $("[name=Email]").val(),
+                'Password' : $("[name=Password]").val(),
+                're_Pass' : $("[name=re_Pass]").val(),
+                'IsAdmin' :account.IsAdmin,
+              },function(data)  
+              {  
+                var obj = JSON.parse(data);
+                if(obj.rep==1){
+                  // window.open(ROOT + "/client/homepage","_self");
+                  logout();
+                }else{
+                  console.log(obj.message)
+                }
+                
+              } )
+                return false;
+    })
+    
+    })
+</script>
+<body>
+  <div class="space-nav"></div>
+
+
+<div class="row">
+  <div class="container" style="width:70%">
+<div class="content" >
+  <div class="tag-title">
+    <span >EDIT USER</span>
+  </div>
+    <div class="tag-title" style="font-size: 15px;">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">UserID</label>
+                <input type="number" class="form-control" name="UserID" value="" placeholder="UserID" readonly/>
+            </div>
+            <div class="mb-3">
+                <label  class="form-label">User Name</label>
+                <input type="text" class="form-control" name="UserName" value="" placeholder="User Name"/>
+            </div>
+            <div class="mb-3">
+                <label  class="form-label">User Email</label>
+                <input type="email" class="form-control" name="Email" value="" placeholder="User Email" readonly/>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Password</label>
+                <input type="password" class="form-control" name="Password" value="" placeholder="Password"/>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Password Confirm</label>
+                <input type="password" class="form-control" name="re_Pass" value="" placeholder="Repeat your password"/>
+            </div>
+            <div class="mb-3 form-check" id="IsAdminCheckBox">
+
+            </div>
+            <button type="submit" name="update-user" class="btn btn-primary">Save</button>
+        </form>
+      
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+<footer class="text-center text-lg-start">
+
+</footer>
+</html>
+
+

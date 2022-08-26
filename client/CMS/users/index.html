@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cocomic - CMS - Index</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/path.js"></script>
+    <script src="../../js/pagination.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authAdmin.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/sidebar.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('.sidebar').html(data);
+  });
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+
+<script>
+  var curPage = 1;
+  var totalUser = 1;
+  var totalPage;
+  var search ='';
+  var perPage = 20;
+  var orderBy = 'ASC';
+  $(document).ready(function(){
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const getPage = urlParams.get('page');
+    const searchKey = urlParams.get('search');
+    if(!isNaN(getPage)&&getPage>0){
+      curPage = getPage;
+    }else{
+      curPage = 1;
+    }
+    if(searchKey){
+      search = searchKey;
+    }
+    
+    $('#liveSearch').val(searchKey);
+    GetListUser();
+
+    $('#liveSearch').keyup(function(){
+      search = $(this).val();
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/users?search='+search);
+      GetListUser();
+    });
+
+    
+  })
+  function GetListUser(){
+      console.log("Done!");
+      $.ajax({  
+            url: ROOT + "/server/controllers/users.php",
+            type: 'get',
+            data: {
+              'list-user': curPage,
+              'search': search,
+              'per-page': perPage,
+              'order-by': orderBy,
+            },
+            success:function(data)  
+            {  
+              $('#UserManagement').empty();
+              var obj = JSON.parse(data);
+              var totalUser = obj.NumOfUser;
+              document.getElementById("total").innerHTML = totalUser;
+              var totalPage = obj.NumOfPage;
+              for(i=0;i<obj.User.length;i++) {
+                var users = `
+                  <tr>
+                    <td>${i+1}</td>
+                    <td>${obj.User[i].UserID}</td>
+                    <td>${obj.User[i].UserName}</td>
+                    <td>${obj.User[i].Email}</td>
+                    <td>${obj.User[i].CreateDate}</td>
+                    <td>${obj.User[i].IsAdmin}</td>
+                    <td>
+                      <a class="btn btn-success" href="../users/detailUser.html?user-id=${obj.User[i].UserID}" role="button">More</a>
+                    </td>
+                    <td>
+                        <input onclick="DeleteUser(${obj.User[i].UserID})" type="button"  class="btn btn-danger" value="Delete">
+                    </td>
+                  </tr>
+                `;
+                $('#UserManagement').append(
+                  users
+                )
+              }
+              $('#pagination').empty();
+              pagination(curPage,totalPage);
+            }  
+        });
+    }
+    function LoadPage(newPage){
+    if(search){
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/users/?page='+newPage+'&search='+search);
+    }else{
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/users?page='+newPage);
+    }
+    curPage = newPage;
+    GetListUser();
+  }
+  function SetPerPage(index){
+    perPage = index;
+    $('#perPage').val(index);
+    GetListUser();
+  }
+  function Sort(sort){
+    orderBy = sort;
+    GetListUser();
+  }
+
+  function DeleteUser(id){
+    var check = confirm("Are you sure you want to delete user '" + id+"'");
+    if(check){
+    $.ajax({  
+    url: ROOT + "/server/controllers/user.php",
+    type: 'delete',
+    async: false,
+    data: {
+      'delete-user':1,
+      'user-id': id,
+    },
+    success:function(data)  
+    {  
+      GetListUser();
+    }  
+  });
+  }
+}
+</script>
+<body>
+
+<div class="space-nav"></div>
+<div class="sidebar">
+        
+</div>
+  <div class="row ">
+    <div class="content">
+      <div class="dashboard">
+        <div class="tag-title">
+          <span >DASHBOARD</span>
+        </div>
+        
+        <div class="card text-dark bg-light mb-3" style="max-width: 18rem;">
+          <div class="card-header ">
+            <h4 class="text-center text-title">Total user:</h4>
+          </div>
+          
+          <div class="card-body">
+            <h2 class="card-text text-center" id="total" name="total"></h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="background-content" id="FilterManager">
+        <div class="row">
+          <div class="col-md-6 col-12" >
+            <div class="mb-3">
+              <label class="form-label" style="padding-right: 15px;">Entries</label>
+              <select class="form-control" style="height:auto;width: 100px;" onchange="SetPerPage(this.value);">
+                <option value="none" selected disabled hidden>20</option>
+                <option style="color: black" value="5" >5</option>
+                <option style="color: black" value="10" >10</option>
+                <option style="color: black" value="20" >20</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-12">
+            <div class="searchInput" style="display: flex;">
+              <div class="input-group " >
+                <input type="search" class="form-control rounded" placeholder="Search" id="liveSearch"/>
+              </div>
+              <span class="center" style="width:50px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-search" viewBox="0 0 16 16">
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+              </span>
+              
+            </div>
+          </div>
+        </div>
+          <div class="row" style="    justify-content: end;">
+            <a href="/cocomic/client/CMS/users/createUser.html" class="btn btn-primary  wrap-text" style="width:auto"> Create User </a>
+          </div>
+        
+      </div>
+      <div class="main-content" id="ComicManagement">
+        <div class="dashboard">
+          <div class="tag-title">
+            <div class="row">
+              <div class="col-6" style="margin: auto;">
+                <span >ALL USERS</span>
+              </div>
+              <div class="col-6" style="text-align: end;" id="sortTag">
+                <button onclick="Sort('ASC')" style="border:none; background: none;"  >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+                  </svg>
+                </button>
+                <button onclick="Sort('DESC')" style="border:none; background: none;"  >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
+                  </svg>
+                </button>
+                
+              </div>
+            </div>
+            
+            
+          </div>
+          
+        </div>
+        <div class="pagination">
+          
+          <div class="container" id="pagination">
+            ...
+          </div>
+        </div>
+        <div class="background-content" >
+          <div style='overflow-y: scroll;'>
+          <table class="table table-striped" >
+            <thead >
+              <tr>
+                <th>STT</th>
+                <th>UserID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>CreateDate</th>
+                <th>IsAdmin</th>
+                <th colspan="2">Option</th>
+              </tr>
+            </thead>
+            <div>
+            <tbody id="UserManagement">
+              
+            </tbody>
+            </div>
+          </table>
+        </div>
+        </div>
+      </div>
+      
+    </div>
+    
+  </div>
+  
+</body>
+<footer class="text-center text-lg-start">
+  
+</footer>
+</html>
+
+

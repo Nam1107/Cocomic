@@ -1,0 +1,70 @@
+
+ <script>
+    $(document).ready(function() {
+     
+     $('#submit').click(async function(){            
+        var data = {
+            'add-banner': 1,
+            'text': $('#TextBanner').val(),
+        }
+        $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Loading...</div>
+                    `
+                  );
+          $("#loading").show();
+            var fileImg = document.getElementById('ChooseImage').files;
+            data[`image`] = await upload(fileImg[0],'Banner');
+          $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Success</div>
+                    `
+                  );
+  
+          setTimeout(function() {
+            $("#loading").hide();
+                  
+              },500);
+        $.post( ROOT + "/server/controllers/slider.php",data, function(data){});
+        GetListBanner();
+        $('#myModal').modal('hide');
+          }); 
+    });
+  
+    </script>
+    <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title text-title">CREATE NEW BANNER</h4>
+            <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formInput">
+            <div class="form-label">Text Banner</div>
+              <div class="form-group" >
+                <div class="row">
+                    <input type="text" id="TextBanner" class="form-control" name="TextBanner"  placeholder="TextBanner"/>
+                </div>
+                  
+                  
+              </div>
+              <br>
+                <div class="form-group">  
+                <div class="form-label">Banner Image URL</div>
+                    <div class="modal-scroll" >
+                      <form>  
+                        <input type="file" class="form-control" style="width: 50%;" id="ChooseImage"  multiple><br><br>
+                        
+                      </form>  
+                      
+                    </div>
+                        
+              </div>
+            </form>
+          </div>
+    
+          <div class="modal-footer">
+            <span type="button" name="submit" id="submit" class="btn btn-primary">Create Banner</span>
+            <span  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</span>
+          </div>
+  
+    </div>

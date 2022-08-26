@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cocomic - CMS - Index</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/path.js"></script>
+    <script src="../../js/pagination.js"></script>
+    <script src="../../js/myModal.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authAdmin.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/sidebar.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('.sidebar').html(data);
+  });
+
+  $.ajax({  
+            url: "/cocomic/client/includes/header.html",
+            async: true,
+            success:function(data)  
+            {  
+              $('#headertag').html(data) ;
+              
+            }  
+        });
+  
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+  var curPage = 1;
+  var search ='';
+  var perPage = 20;
+  var sortBy = 'ASC';
+  $(document).ready(function(){
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const getPage = urlParams.get('page');
+    const searchKey = urlParams.get('search');
+
+    
+    if(!isNaN(getPage)&&getPage>0){
+      curPage = getPage;
+    }else{
+      curPage = 1;
+    }
+    if(searchKey){
+      search = searchKey;
+    }
+    
+    $('#liveSearch').val(searchKey);
+
+      GetListComic();
+    
+
+    $('#liveSearch').keyup(function(){
+      search = $(this).val();
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/comics?search='+search);
+      GetListComic();
+    });
+    
+  })
+
+  function SetPerPage(index){
+    perPage = index;
+    $('#perPage').val(index);
+    GetListComic();
+  }
+
+  function GetListComic(){
+      console.log("Done!");
+      $('#comic-card').empty();
+      $.ajax({  
+            url: ROOT + "/server/controllers/comics.php",
+            type: 'get',
+            data: {
+              'list-comic': keyadmin,
+              'curPage': curPage,
+              'search': search,
+              'per-page': perPage,
+              'sort-by': sortBy,
+              'order-by': 'CreateDate',
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              var totalComic = obj.NumOfComic;
+              var totalPage = obj.NumOfPage;
+              curPage = obj.Page+1;
+              document.getElementById("total").innerHTML = totalComic;
+              $('#pagination').empty();
+              if(obj.comics.length){
+                pagination(curPage,totalPage);
+                obj.comics.forEach(GetComicCard);
+              }
+              
+            }  
+        });
+    }
+    function SetPublic(ComicID){
+    var check = confirm("Are you sure you want to change comic '" + ComicID+"'");
+    if(check){
+        $.ajax({  
+            url:ROOT + "/server/controllers/comics.php",
+            type: 'put',
+            data: {
+            'setpublic':ComicID,
+            },
+        });
+        
+        GetListComic();
+    }else{
+        return;
+    }
+  };
+  function DeleteComic(ComicID){
+    var check = confirm("Are you sure you want to delete comic '" + ComicID+"'");
+    if(check){
+        $.ajax({  
+            url:ROOT + "/server/controllers/comics.php",
+            type: 'delete',
+            data: {
+                'delete-id':ComicID,
+            },
+            success:function(){
+              window.open("/cocomic/client/CMS/comics","_self");
+            }
+        });
+    }else{
+        return;
+    }
+  };
+  function Sort(sort){
+    sortBy = sort;
+    GetListComic();
+  }
+  function Search(){
+    search = $('#liveSearch').val();
+    window.history.pushState(null, document.title, '/cocomic/client/CMS/comics?search='+search);
+    GetListComic();
+  }
+  function LoadPage(newPage){
+    if(search){
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/comics?page='+newPage+'&search='+search);
+    }else{
+      window.history.pushState(null, document.title, '/cocomic/client/CMS/comics?page='+newPage);
+    }
+    curPage = newPage;
+    GetListComic();
+  }
+
+  function render(comicCard){
+    $('#comic-card').append(
+            comicCard
+        )
+  }
+
+  function PublicTag(IsPublic,ComicID){
+        var public;
+        if(IsPublic!=0){
+            public = `<button onclick="SetPublic(${ComicID})" class="btn btn-success">Public</button>`
+        }
+        else {
+            public = `<button onclick="SetPublic(${ComicID})" class="btn btn-secondary">UnPublic</button>`
+        }
+        public += `<button onclick="DeleteComic(${ComicID})" class="btn btn-danger">Delete</button>`
+        return public;
+    }
+    function StatusTag(Status){
+        var status;
+        if(Status=='OnGoing'){
+          status = `<div class="notice " style="background-color:#dc3545">${Status}</div>`
+        }
+        else {
+          status= `<div class="notice " style="background-color:#198754">${Status}</div>`
+        }
+        return status;
+    }
+    function GetComicCard(item) {
+        var comicCard = `
+            <li class="card" >
+                  <a class="card-image" href="/cocomic/client/CMS/comics/detail.html?comic-id=${item.ComicID}" style="background-image: url(${item.ComicImage});"></a>
+                `
+                +StatusTag(item.Status)+
+                `
+                <div class="card-body">
+                <div class="card-title wrap-text">${item.ComicName}</div>
+                
+                <p class="card-text wrap-text">Last Update: <br>${item.LastUpdate}</p>
+                
+                </div>
+                <div class="card-footer">`
+                    +PublicTag(item.IsPublic,item.ComicID)+
+                `</div>
+                </div>
+            </li>
+        `
+        render(comicCard);
+    }
+</script>
+<body>
+
+  <div class="space-nav"></div>
+<div class="sidebar">
+        
+</div>
+  <div class="row ">
+    <div class="content">
+      <div class="dashboard">
+        <div class="tag-title">
+          <span >DASHBOARD</span>
+        </div>
+        
+        <div class="card text-dark bg-light mb-3" style="max-width: 18rem;">
+          <div class="card-header ">
+            <h4 class="text-center text-title">Total comic:</h4>
+          </div>
+          
+          <div class="card-body">
+            <h2 class="card-text text-center" id="total" name="total"></h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="background-content" id="FilterManager">
+        <div class="row">
+          <div class="col-md-6 col-12" >
+            <div class="mb-3">
+              <label class="form-label" style="padding-right: 15px;">Entries</label>
+              <select class="form-control" style="height:auto;width: 100px;" onchange="SetPerPage(this.value);">
+                <option value="none" selected disabled hidden>20</option>
+                <option style="color: black" value="5" >5</option>
+                <option style="color: black" value="10" >10</option>
+                <option style="color: black" value="20" >20</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-12">
+            <div class="searchInput" style="display: flex;">
+              <div class="input-group " >
+                <input type="search" class="form-control rounded" placeholder="Search" id="liveSearch"/>
+              </div>
+              <span class="center" style="width:50px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-search" viewBox="0 0 16 16">
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+              </span>
+              
+            </div>
+          </div>
+        </div>
+          <div class="row" style="    justify-content: end;">
+            <a href="/cocomic/client/CMS/comics/createComic.html" class="btn btn-primary  wrap-text" style="width:auto"> Create Comic </a>
+          </div>
+        
+      </div>
+      <div class="main-content" id="ComicManagement">
+        <div class="dashboard">
+          <div class="tag-title">
+            <div class="row">
+              <div class="col-6" style="margin: auto;">
+                <span >ALL COMIC</span>
+              </div>
+              <div class="col-6" style="text-align: end;" id="sortTag">
+                <button onclick="Sort('ASC')" style="border:none; background: none;"  >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+                  </svg>
+                </button>
+                <button onclick="Sort('DESC')" style="border:none; background: none;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
+                  </svg>
+                </button>
+                
+              </div>
+            </div>
+            
+            
+          </div>
+          
+        </div>
+        <div class="pagination">
+          
+          <div class="container" id="pagination">
+            ...
+          </div>
+        </div>
+        <div class="cards" id="comic-card">
+        </div>
+      </div>
+      
+    </div>
+    
+  </div>
+  
+</body>
+<footer class="text-center text-lg-start">
+  
+</footer>
+</html>
+
+

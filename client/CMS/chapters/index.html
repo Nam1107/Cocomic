@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chapter</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/path.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+    <script src="/cocomic/client/js/authAdmin.js"></script>
+    <script type="module" src="/cocomic/client/js/firebaseConnect.js"></script>
+    <script type="text/javascript" src="/cocomic/client/js/uploadImg.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/sidebar.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('.sidebar').html(data);
+  });
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const getChapter = urlParams.get('chapter-id');
+    var orderBy = 'ASC';
+    var pagePick = 1;
+    var getComic;
+    var getChapterNum;
+    $(document).ready(function(){
+      GetChapterDetail();
+      GetListPage();
+    $("#CreateBtn").click(function() {
+      var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+      $.ajax({  
+                  url:"modal/createPage.html",
+                  success:function(data)  
+                  {  
+                      $('#modalContent').html(data);
+                  }  
+            });
+      myModal.show();
+    });
+  });
+
+  function Sort(sort){
+    orderBy = sort;
+    GetListPage();
+  }
+
+  function EditPage(obj) {
+    pagePick = obj;
+    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+    $.ajax({  
+                url:"modal/editPage.html",
+                success:function(data)  
+                {  
+                     $('#modalContent').html(data);
+                }  
+           });
+    myModal.show();
+  };
+  function EditChapter() {
+    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+    $.ajax({  
+                url:"modal/editChapter.html",
+                success:function(data)  
+                {  
+                     $('#modalContent').html(data);
+                }  
+           });
+    myModal.show();
+  };
+
+  function GetChapterDetail(){
+    $.ajax({  
+    url: ROOT + "/server/controllers/chapters.php",
+    type: 'get',
+    async: false,
+    data: {
+      'chapter-id': getChapter,
+    },
+    success:function(data)  
+    {  
+      var obj = JSON.parse(data);
+      getComic = obj.Comic.ComicID;
+      getChapterNum = parseFloat(obj.Chapter.ChapterNum) ;
+      $("#ChapterManagement").html(
+        `
+        <div class="row">
+          <div class="col-sm-3 col-12 text-center"><img class="ComicImage" alt="tweetImg" src="${obj.Comic.ComicImage}"></div>
+          <div class="col-sm-7 col-10" style="padding-top:12px">
+              <p ><span class="text-title">ComicName : </span>${obj.Comic.ComicName}</p>
+              <p ><span class="text-title">ChapterName : </span>${obj.Chapter.ChapterName}</p>
+              <p ><span class="text-title">ChapterID : </span>${obj.Chapter.ChapterID}</p>
+              <p ><span class="text-title">CreateDate : </span>${obj.Chapter.CreateDate}</p>
+              <p ><span class="text-title">LastUpdate : </span>${obj.Chapter.LastUpdate}</p>
+            </div>
+            <div class="col-2" style="padding-top:12px">
+              <button onclick="EditChapter()"  type="button" data-toggle="modal" class="btn btn-warning" style="width:50px" id="EditBtn">
+              <svg xmlns="http://www.w3.org/2000/svg"    fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16" >
+                <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        `
+      );
+      GetListChapter(obj.Comic.ComicID,obj.Chapter.ChapterName);
+    }  
+  });
+
+
+
+  }
+  function GetListChapter(comicID,chapterName){
+    console.log("");
+    $.ajax({  
+    url: ROOT + "/server/controllers/chapters.php",
+    type: 'get',
+    data: {
+      'comic-id': comicID,
+    },
+    success:function(data)  
+    {   
+      var obj = JSON.parse(data);
+      $('#curChapter').html(
+        `
+        <option value="none" selected disabled hidden>${chapterName}</option>
+        `
+      );
+      for(i=0;i<obj.length;i++){
+        
+        $('#curChapter').append(
+            `
+            <option value="?chapter-id=${obj[i]['ChapterID']}">${obj[i]['ChapterName']}</option>
+            `
+          );
+        if(obj[i]['ChapterID']==getChapter){
+          if(i>0){
+            $('#backChapter').html(
+            `
+            <a type="button" href="/cocomic/client/CMS/chapters/index.html?chapter-id=${obj[i-1]['ChapterID']}" class="item-page-light"  >
+                  <svg xmlns="http://www.w3.org/2000/svg"  width="16" height="16" fill="currentColor" style="margin-top:5px" class="bi bi-arrow-left-short" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
+                  </svg>
+            </a>
+            `
+          )
+          }
+          if(i<obj.length-1){
+            $('#forwardChapter').html(
+            `
+                  <a type="button" href="/cocomic/client/CMS/chapters/index.html?chapter-id=${obj[i+1]['ChapterID']}" class="item-page-light"  >
+                    <svg xmlns="http://www.w3.org/2000/svg"  width="16" height="16" fill="currentColor" style="margin-top:5px" class="bi bi-arrow-right-short" viewBox="0 0 16 16">
+                         <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"/>
+                    </svg>
+                  </a>
+            `
+          )
+          }
+          
+        }
+      }
+      
+    }
+  });
+  }
+  function GetListPage(){
+    $.ajax({  
+    url: ROOT + "/server/controllers/pages.php",
+    type: 'get',
+    data: {
+      'chapter-id': getChapter,
+      'order-by': orderBy,
+    },
+    success:function(data)  
+    {  
+      var obj = JSON.parse(data);
+      $('#PageManagement').empty();
+      for (let i = 0; i < obj.length; i++) {
+        var page = `
+          <tr>
+            <td>${obj[i]['Page']}</td>
+              <td>${obj[i]['PageID']}</td>
+              <td >
+                <img src="${obj[i]['PageImgURL']}" style="width:100%">
+              </td>
+              <td>
+                <button onclick="EditPage(${obj[i]['PageID']})" type="button" data-toggle="modal" class="btn btn-warning" >Edit</button>
+              </td>
+              <td>
+                  <button onclick="DeletePage(${obj[i]['PageID']})" type="button" data-toggle="modal" class="btn btn-danger" >Delete</button>
+              </td>
+          </tr>
+        `;
+        $('#PageManagement').append(
+          page
+        )
+      }
+    }  
+  });
+  }
+  function DeletePage(PageID){
+    var check = confirm("Are you sure you want to delete page '" + PageID+"'");
+    if(check){
+      $.ajax({  
+    url: ROOT + "/server/controllers/pages.php",
+    type: 'delete',
+    data: {
+      'delete-id':PageID,
+    },
+    success:function(data)  
+    { 
+      GetChapterDetail();
+      GetListPage();
+    }});
+    }else{
+        return;
+    }
+    
+  };
+</script>
+
+<div id="loading" ><div id="loading_anim">
+  <div style="font-size:30px">Loading...</div>
+</div></div>
+
+<div class="modal container-fluid" id="myModal">
+  <div class="modal-dialog modal-lg" id="modalContent">
+    
+  </div>
+</div>
+<div class="space-nav"></div>
+<div class="sidebar">
+      
+</div>
+  <div class="row ">
+
+    <div class="content">
+      <div class="dashboard">
+        <div class="tag-title">
+          <span >DETAIL </span>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="row">
+          <div id="ChapterManagement">
+            ...
+          </div>
+        </div>
+        
+          <div class="dashboard">
+            <div class="tag-title">
+              <div class="row">
+                <div class="col-6" style="margin: auto;">
+                  <span >PAGE MANAGEMENT</span>
+                </div>
+                <div class="col-6" style="text-align: end;" id="sortTag">
+                  <button onclick="Sort('ASC')" style="border:none; background: none;"  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+                    </svg>
+                  </button>
+                  <button onclick="Sort('DESC')" style="border:none; background: none;"  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-down-short" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                  </button>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-toggle="modal" class="btn btn-primary" id="CreateBtn">Create new pages</button>
+          
+          <div style='overflow-y: scroll;'>
+                <table class="table table-striped" >
+                  <thead >
+                    <tr>
+                      <th>PageNum</th>
+                      <th>PageID</th>
+                      
+                      <th>PageURL</th>
+                      <th colspan="2">Option</th>
+                    </tr>
+                  </thead>
+                  <div>
+                  <tbody id="PageManagement">
+                    
+                  </tbody>
+                  </div>
+                </table>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chaptercontroller">
+    <div class="container col-4" style="min-width: 250px;">
+      <div id="backChapter" style="float: left;">
+        
+      </div>
+      
+        <select  id="curChapter"  onchange="location = this.value;">
+            ...
+        </select>
+        <div id="forwardChapter" style="float: right;">
+          
+        </div>
+        
+        
+      
+    </div>
+  </div>
+
+<footer class="text-center text-lg-start">
+
+</footer>
+
+
+</html>
+
+

@@ -1,0 +1,192 @@
+
+
+
+<script>
+  $(document).ready(function(){
+      $.ajax({  
+          url: ROOT + "/server/controllers/comics.php",
+          type: 'get',
+          async: false,
+          data: {
+            'get-comic': keyadmin,
+            'comic-id': getComic,
+          },
+          success:function(data)  
+          {  
+            var data = JSON.parse(data);
+            if(data.errors == 1){
+              window.open(ROOT + "/client/CMS/comics","_self");
+            }else{
+              var obj = data.Comic;
+              var tags = data.Tags;
+            $('#ComicID').val(obj['ComicID']);
+            $('#ComicName').val(obj['ComicName']);
+            $('#AnotherName').val(obj['AnotherName']);
+            $('#ComicDescription').val(obj['ComicDescription']);
+            $('#Author').val(obj['Author']);
+            $('#ComicImage').val(obj['ComicImage']);
+            $('#ComicThumb').val(obj['ComicThumb']);
+
+            $('#Status').html(
+                `
+                <option value="${obj['Status']}" selected disabled hidden>${obj['Status']}</option>
+                <option value="OnGoing">OnGoing</option>
+                <option value="Completed">Completed</option>
+                `
+              );
+
+              $('#Tags').html(
+                `
+                <option value="${obj['Tags']}" selected disabled hidden>${obj['Tags']}</option>
+                `
+              );
+            for(var i=0;i<tags.length;i++){
+              $('#Tags').append(
+                `
+                <option value="${tags[i]['TagsName']}" >${tags[i]['TagsName']}</option>
+                `
+              );
+            }
+
+            if(obj['IsPublic']==1){
+              $("#IsPublic").prop("checked", true);
+            }else{
+              $("#IsPublic").prop("checked", false);
+            }
+            // 
+          }
+          }  
+      });
+      $("#Update-comic").click(async function(){
+          var data = {
+          'update-comic':$('#ComicID').val(),
+          'IsPublic': document.getElementsByName("IsPublic")[0].checked,
+          'AnotherName': $('#AnotherName').val(),
+          'ComicName':$('#ComicName').val(),
+          'ComicDescription':$('#ComicDescription').val(),
+          'Author':$('#Author').val(),
+          'ComicThumb':$('#ComicThumb').val(),
+          'Status':document.getElementById("Status").value,
+          'Tags' : document.getElementById("Tags").value,
+          }
+          $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Loading...</div>
+                    `
+                  );
+          $("#loading").show();
+
+          var fileImg = document.getElementById('ChooseImage').files;
+          var fileThumb = document.getElementById('ChooseThumb').files;
+          var img = await upload(fileImg[0],'ComicImage');
+          var thumb = await upload(fileThumb[0],'ComicThumb');
+
+
+          if(img != null){
+            data['ComicImage'] = img;
+          }else {
+            data['ComicImage'] = $('#ComicImage').val();
+          }
+
+          if(thumb != null){
+            data['ComicThumb'] = thumb;
+          }else {
+            data['ComicThumb'] = $('#ComicThumb').val();
+          }
+          $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Success</div>
+                    `
+                  );
+          UpdateComic(data);
+
+          setTimeout(function() {
+            $("#loading").hide();
+                  
+              },500);
+          
+      })
+  });
+  function SetStatus(status){
+    $('#Status').val(status);
+
+  }
+  function UpdateComic(updatecomic){
+    $.ajax({  
+    url: ROOT + "/server/controllers/comics.php",
+    type: 'put',
+    data: updatecomic,
+    success:function(data)  
+    {  
+      GetComicDetail();
+    }  
+  });
+  }
+</script>
+
+<div class="modal-content">
+    <div class="modal-header">
+      <p class="modal-title text-title">Create Comic</p>
+      <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <form id="form2">
+        <div class="form-label">Comic ID</div>
+            <div class="form-group mb-3">
+                <input type="text"  id="ComicID" class="form-control" name="ComicID" value="" readonly/>
+            </div>
+        <div class="form-label">Comic Name</div>
+        <div class="form-group mb-3">
+            
+            <input type="text" id="ComicName" class="form-control" name="ComicName" value="" placeholder="Comic Name"/>
+        </div>
+        <div class="form-label">Another Name</div>
+        <div class="form-group mb-3">
+            
+            <input type="text" id="AnotherName" class="form-control" name="AnotherName" value="" placeholder="Comic Name"/>
+        </div>
+        <div class="form-label">Author</div>
+        <div class="form-group mb-3">
+            <input type="text" id="Author" class="form-control" name="Author" value="" placeholder="author"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="Status" name="Status" style="height:auto;width:auto">
+            
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tags</label>
+          <select class="form-control" id="Tags" name="Tags" style="height:auto;width:auto">
+            
+          </select>
+        </div>
+        <div class="form-group mb-3">
+          <label for="agree-term" class="form-check-label" style="padding-right: 15px;">Public</label>
+          <input type="checkbox" name="IsPublic" id="IsPublic"  class="form-check-input" />
+          
+        </div>
+        
+        <div class="form-label">Comic Description</div>
+        <div class="form-group mb-3">
+            <textarea rows="10" type="text" id="ComicDescription" class="form-control" name="ComicDescription" value=""  placeholder="comicDescription" ></textarea>
+        </div>
+        
+        <div class="form-label">Comic Image</div>
+        <div class="form-group mb-3">
+          <input type="file" class="form-control" style="width: 50%;" id="ChooseImage"  ><br><br>
+            <input type="text" id="ComicImage"  class="form-control" name="ComicImage" value="" placeholder="comicImage" readonly/>
+          </div>
+        <div class="form-label">Comic Thumb</div>
+        <div class="form-group mb-3">
+          <input type="file" class="form-control" style="width: 50%;" id="ChooseThumb"  ><br><br>
+            <input type="text" id="ComicThumb" class="form-control" name="ComicThumb" value="" placeholder="comicThumb" readonly/>
+        </div>
+        
+      </form>
+    </div>
+    <div class="modal-footer">
+      <span id="Update-comic" type="button"  class="btn btn-primary" data-bs-dismiss="modal" >Update</span>
+      <span  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</span>
+    </div>
+</div>

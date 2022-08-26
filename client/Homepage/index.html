@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cocomic - CMS - Index</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/cocomic/client/css/style.css">
+    <script src="/cocomic/client/js/path.js"></script>
+    <script src="/cocomic/client/js/pagination.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+  fetch("/cocomic/client/includes/slider.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#slider-bar').html(data) ;
+  });
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+  var curPage = 1;
+  var perPage = 20;
+  var sortBy = 'DESC';
+  $(document).ready(function(){
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    GetListComic();
+
+    var input = document.getElementById("liveSearch");
+    input.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("searchBtn").click();
+      }
+    });
+
+    GetListRank('LikeNo');
+    $('#likeRank,#followRank, #viewRank').click(function(){
+        $('#likeRank,#followRank, #viewRank').removeClass('active');
+        $(this).addClass('active');
+        var rank =$(this).val();
+        GetListRank(rank);
+    });
+    
+  })
+
+  function Search(){
+    var search =  $('#liveSearch').val();
+    window.open(ROOT + "/client/homepage/search.html?search="+search,"_self");
+  }
+
+  function SetPerPage(index){
+    perPage = index;
+    $('#perPage').val(index);
+    GetListComic();
+  }
+
+  function GetListRank(rank){
+      console.log("Done!");
+      $('#list-rank').empty();
+      $.ajax({  
+            url: ROOT + "/server/controllers/comics.php",
+            type: 'get',
+            data: {
+              'list-rank': rank,
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              var comic = obj.Comic;
+              for(var i=0;i<comic.length;i++){
+                $('#list-rank').append(
+                `
+                <div class="tag-title " >
+                  <a href="/cocomic/client/homepage/comicdetail.html?comic-id=${comic[i].ComicID}">
+                <div class="row ">
+                  <div class="numRank col-1"">
+                    <span>${i+1}</span>
+                  </div>
+                  <div class="col-4 " >
+                    <img class="imgRank" src="${comic[i].ComicImage}">
+                  </div>
+                  <div class="col-7">
+                    <div class="nameRank">${comic[i].ComicName}</div>
+                    <div class="chapRank">Chapter ${LastChapterNum(comic[i].ComicID)}</div>
+                    <div class="chapRank">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-fire" viewBox="0 0 16 16">
+                        <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16Zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15Z"/>
+                      </svg>
+                      <span>${comic[i].ViewNo}</span>
+                    </div>
+                  </div>
+                </div>
+                </a>
+              </div>
+                `
+              );
+
+              }
+              
+
+            }  
+        });
+    }
+
+  function GetListComic(){
+      console.log("Done!");
+      $('#comic-card').empty();
+      $.ajax({  
+            url: ROOT + "/server/controllers/comics.php",
+            type: 'get',
+            data: {
+              'list-comic': keyuser,
+              // 'curPage': curPage,
+              // 'search': search,
+              // 'per-page': perPage,
+              'curPage': 1,
+              'search': '',
+              'per-page': 20,
+              'sort-by': sortBy,
+              'order-by': 'LastUpdate',
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              obj.comics.forEach(GetComicCard);
+              
+            }  
+        });
+    }
+
+
+  
+
+    function LastChapterNum(id){
+      var chapNum = 0;
+      $.ajax({  
+            url: ROOT + "/server/controllers/chapters.php",
+            async: false,
+            type: 'get',
+            data: {
+              'last-chapter': id,
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              chapNum =  parseFloat(obj.ChapterNum);
+            }  
+        });
+        return chapNum;
+    }
+    function StatusTag(Status){
+        var status;
+        if(Status=='OnGoing'){
+          status = `<div class="notice " style="background-color:#dc3545">${Status}</div>`
+        }
+        else {
+          status= `<div class="notice " style="background-color:#198754">${Status}</div>`
+        }
+        return status;
+    }
+    function GetComicCard(item) {
+        var comicCard = `
+            <li class="card" >
+                  <a class="card-image" href="/cocomic/client/homepage/comicdetail.html?comic-id=${item.ComicID}" style="background-image: url(${item.ComicImage});"></a>
+                
+                
+                <div class="notice " style="background-color:#1f2937ee">Chapter ${LastChapterNum(item.ComicID)}</div>
+                
+                <div class="card-body">
+                <div class="card-title wrap-text">${item.ComicName}</div>
+                
+                <p class="card-text wrap-text">Last Update: <br>${item.LastUpdate}</p>
+                
+                </div>
+                </div>
+            </li>
+        `
+        render(comicCard);
+    }
+
+    function render(comicCard){
+    $('#comic-card').append(
+            comicCard
+        )
+  }
+</script>
+<body>
+
+  <div class="space-nav"></div>
+<div id="slider-bar">
+
+</div>
+
+
+<div class="row ">
+  <div class="content">
+    <div class="background-content" id="FilterManager">
+      <div class="row" style="    justify-content: center;">
+        <div class="col-md-6 col-12">
+          <div class="searchInput" style="display: flex;">
+            <div class="input-group " >
+              <input type="search" class="form-control rounded" placeholder="Search" id="liveSearch"/>
+            </div>
+            <button onclick="Search()" id="searchBtn" class="center" style="width:50px;background: none;border: none;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+              </svg>
+            </button>
+            
+          </div>
+        </div>
+      </div>
+        
+      
+    </div>
+    <div class="row" style="flex-wrap: wrap-reverse !important;">
+      
+      <div class="main-content col-md-9 col-12" id="ComicManagement" style="padding: 0;">
+          <div class="tag-title">
+            <div class="row">
+              <div class="col-6">
+                <span >Latest Updated</span>
+              </div>
+              <div class="col-6" style="text-align: right;">
+                <a href="genres.html" >More</a>
+              </div>
+            </div>
+            
+            
+          </div>
+          <div class="cards" id="comic-card">
+          </div>
+      </div>
+      <div class="ranking col-md-3 col-12" style="padding: 0 10px;">
+        <div class="tag-title">
+          <div >RANK</div >
+        </div>
+            <button id="likeRank" type="submit"  class="item-tag active" value="LikeNo">Like</button>
+            <button id="followRank" type="submit"  class="item-tag" value="FollowNo">Follow</button>
+            <button id="viewRank" type="submit"  class="item-tag" value="ViewNo">View</button>
+        <div id="list-rank">
+          
+          
+
+        </div>
+        
+      </div>
+    </div>
+    
+    
+  </div>
+  
+</div>
+  
+</body>
+<footer class="text-center text-lg-start">
+  
+</footer>
+</html>
+
+

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sign Up Form by Colorlib</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/path.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/sidebar.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('.sidebar').html(data);
+  });
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    document.querySelector("header").innerHTML = data;
+  });
+</script>
+
+<header>
+</header>
+
+<script>
+
+</script>
+
+<div class="modal container-fluid" id="myModal">
+  <div class="modal-dialog modal-lg" id="noidung">
+    
+  </div>
+</div>
+<div class="sidebar">
+      
+</div>
+  <div class="row ">
+    <div class="content">
+      <div class="dashboard">
+        <div class="dashboard-title">
+          <span >DETAIL </span>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="row">
+          <div id="ManageComic">
+              
+          </div>
+        </div>
+        
+        <div class="row">
+        </div>
+        
+        <div class="col-4">
+              
+              
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<footer class="text-center text-lg-start">
+
+</footer>
+
+
+</html>
+
+

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cocomic - CMS - Index</title>
+    <script type="text/javascript" src="/cocomic/client/js/jquery-3.6.0.min.js"></script>
+    <link href="/cocomic/client/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/cocomic/client/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/cocomic/client/css/style.css">
+    <script src="/cocomic/client/js/path.js"></script>
+    <script src="/cocomic/client/js/pagination.js"></script>
+    <script src="/cocomic/client/js/authLogin.js"></script>
+</head>
+
+<script>
+  fetch("/cocomic/client/includes/header.html")
+  .then(response => {
+    return response.text()
+  })
+  .then(data => {
+    $('#headertag').html(data) ;
+  });
+
+</script>
+<div id="headertag">
+
+</div>
+
+<script>
+  var curPage = 1;
+  var search ='';
+  var sortBy = 'ASC';
+  $(document).ready(function(){
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const getPage = urlParams.get('page');
+    const searchKey = urlParams.get('search');
+    if(!isNaN(getPage)&&getPage>0){
+      curPage = getPage;
+    }else{
+      curPage = 1;
+    }
+    if(searchKey){
+      search = searchKey;
+    }
+    
+    $('#liveSearch').val(searchKey);
+    GetListComic();
+
+    $('#liveSearch').keyup(function(){
+      search = $(this).val();
+      window.history.pushState(null, document.title, '/cocomic/client/homepage/search.html?search='+search);
+      GetListComic();
+    });
+
+  })
+
+
+  function GetListComic(){
+      console.log("Done!");
+      $('#comic-card').empty();
+      $.ajax({  
+            url: ROOT + "/server/controllers/comics.php",
+            type: 'get',
+            data: {
+              'list-comic': keyuser,
+              'curPage': curPage,
+              'search': search,
+              'per-page': 20,
+              'sort-by': sortBy,
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+
+              var totalComic = obj.NumOfComic;
+              var totalPage = obj.NumOfPage;
+              curPage = obj.Page+1;
+              $('#pagination').empty();
+              if(obj.comics.length){
+                pagination(curPage,totalPage);
+                obj.comics.forEach(GetComicCard);
+              }
+              
+            }  
+        });
+    }
+
+  function Sort(sort){
+    sortBy = sort;
+    GetListComic();
+  }
+  function Search(){
+    search = $('#liveSearch').val();
+    window.history.pushState(null, document.title, '/cocomic/client/homepage/search.html?search='+search);
+    GetListComic();
+  }
+  function LoadPage(newPage){
+    if(search){
+      window.history.pushState(null, document.title, '/cocomic/client/homepage/search.html?search='+search+'&page='+newPage);
+    }else{
+      window.history.pushState(null, document.title, '/cocomic/client/homepage/search.html?page='+newPage);
+    }
+    curPage = newPage;
+    GetListComic();
+  }
+
+  function render(comicCard){
+    $('#comic-card').append(
+            comicCard
+        )
+  }
+
+    function LastChapterNum(id){
+      var chapNum = 0;
+      $.ajax({  
+            url: ROOT + "/server/controllers/chapters.php",
+            async: false,
+            type: 'get',
+            data: {
+              'last-chapter': id,
+            },
+            success:function(data)  
+            {  
+              var obj = JSON.parse(data);
+              chapNum =  parseFloat(obj.ChapterNum);
+            }  
+        });
+        return chapNum;
+    }
+    function StatusTag(Status){
+        var status;
+        if(Status=='OnGoing'){
+          status = `<div class="notice " style="background-color:#dc3545">${Status}</div>`
+        }
+        else {
+          status= `<div class="notice " style="background-color:#198754">${Status}</div>`
+        }
+        return status;
+    }
+    function GetComicCard(item) {
+        var comicCard = `
+            <li class="card" >
+                  <a class="card-image" href="/cocomic/client/homepage/comicdetail.html?comic-id=${item.ComicID}" style="background-image: url(${item.ComicImage});"></a>
+                
+                
+                <div class="notice " style="background-color:#1f2937ee">Chapter ${LastChapterNum(item.ComicID)}</div>
+                
+                <div class="card-body">
+                <div class="card-title wrap-text">${item.ComicName}</div>
+                
+                <p class="card-text wrap-text">Last Update: <br>${item.LastUpdate}</p>
+                
+                </div>
+                </div>
+            </li>
+        `
+        render(comicCard);
+    }
+</script>
+<body>
+
+  <div class="space-nav"></div>
+
+<div class="row ">
+  <div class="content">
+    <div class="background-content" id="FilterManager">
+      <div class="row" style="    justify-content: center;">
+        <div class="col-md-6 col-12">
+          <div class="searchInput" style="display: flex;">
+            <div class="input-group " >
+              <input type="search" class="form-control rounded" placeholder="Search" id="liveSearch"/>
+            </div>
+            <span class="center" style="width:50px">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+              </svg>
+            </span>
+            
+          </div>
+        </div>
+      </div>
+        
+      
+    </div>
+    <div class="row">
+      
+      <div class="main-content" id="ComicManagement" style="padding: 0;">
+          <div class="pagination">
+            
+            <div class="container" id="pagination">
+              ...
+            </div>
+          </div>
+          <div class="cards" id="comic-card">
+          </div>
+      </div>
+      
+    </div>
+    
+    
+  </div>
+  
+</div>
+  
+</body>
+<footer class="text-center text-lg-start">
+  
+</footer>
+</html>
+
+

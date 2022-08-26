@@ -1,0 +1,76 @@
+<header>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/cocomic/client/CMS/comics">
+            COCOMIC
+          </a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <div class="dropdown">
+            
+          
+        </ul>
+      </div>
+    </nav>
+  </header>
+  
+  
+  <script>
+    $(document).ready(function(){
+        $.ajax({  
+        url: ROOT + "/server/controllers/authen.php",
+        type: 'post',
+        async: false,
+        data: {
+          'authenLogin' : 1,
+        },
+        success:function(data)  
+        {  
+          var obj = JSON.parse(data);
+          console.log(obj);
+          if(obj.status!='guest'){
+            $('.dropdown').html(
+              `
+              <div  type="button" style="width: 100%;" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-person-circle" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+                <span style="font-">${obj.user.UserName}</span>
+              </div>
+              <div class="dropdown-content" style="margin-left: -75px;">
+                <a href="#">Profile</a>
+                <a onclick="logout()">Log Out</a>
+              </div>
+              `
+
+            )
+          }else {
+            $('.dropdown').html(
+              `
+              <div class="dropdown-auth">
+              <a href="/cocomic/client/auth/login.html">Sign In</a >
+
+                <a href="#">Sign Up</a >
+              </div>
+              `
+            )
+          }
+        }  
+    });
+  })
+    function logout(){
+      $.ajax({  
+              url: ROOT + "/server/controllers/authen.php",
+              type: 'post',
+              data: {
+                'logout': 1,
+              },
+              success:function(data)  
+              {  
+                window.open(ROOT + "/client/auth/login.html","_self");
+              }  
+          });
+    }
+  </script>

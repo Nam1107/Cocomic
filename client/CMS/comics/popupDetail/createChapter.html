@@ -1,0 +1,109 @@
+
+ <script>
+  $(document).ready(function() {
+   
+  $.ajax({  
+      url: ROOT + "/server/controllers/chapters.php",
+      type: 'get',
+      data: {
+      'comic-id':getComic,
+      'order-by': 'DESC',
+      },
+      success:function(data)  
+      {  
+          var obj = JSON.parse(data);
+          
+          if(obj.length) {
+            ChapterNum = parseFloat(obj[0].ChapterNum)+1;
+          }else{
+            ChapterNum = 1;
+          }
+          $('#ChapterNum').val(ChapterNum);
+          $('#ChapterName').val('Chapter '+ChapterNum);
+      }  
+  });
+
+  $('#ChapterNum').change(function(){
+    var index =  $('#ChapterNum').val();
+    $('#ChapterName').val('Chapter '+index);
+  })
+   
+   $('#submit').click(async function(){            
+      var data = {
+          'add-chapter': getComic,
+          'ChapterNum': $('#ChapterNum').val(),
+          'ChapterName': $('#ChapterName').val(),
+      }
+      $("#loading_anim").html(
+                  `
+                  <div style="font-size:30px">Loading...</div>
+                  `
+                );
+        $("#loading").show();
+      var fileImg = document.getElementById('ChooseImage').files;
+        for(var i=0;i<fileImg.length;i++){
+
+          // var img = await upload(fileImg[i],'ComicImage');
+          data[`obj[${i}][Page]`] = i+1;
+          data[`obj[${i}][PageImgURL]`] = await upload(fileImg[i],getComic+'/'+$('#ChapterNum').val());
+
+        }
+        $("#loading_anim").html(
+                  `
+                  <div style="font-size:30px">Success</div>
+                  `
+                );
+
+        setTimeout(function() {
+          $("#loading").hide();
+                
+            },500);
+      $.post( ROOT + "/server/controllers/chapters.php",data, function(data){});
+      GetComicDetail();
+      GetListChapter();
+      $('#myModal').modal('hide');
+        }); 
+  });
+
+  </script>
+  <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title text-title">CREATE NEW CHAPTER</h4>
+          <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formInput">
+          <div class="form-label">Chapter Name</div>
+            <div class="form-group" >
+              <div class="row">
+                <div class="col-2">
+                  <input type="number" id="ChapterNum" class="form-control" name="ChapterNum"  placeholder="Chapter Name"/>
+                </div>
+                <div class="col-10">
+                  <input type="text" id="ChapterName" class="form-control" name="ChapterName"  placeholder="Chapter Name"/>
+                </div>
+              </div>
+                
+                
+            </div>
+            <br>
+              <div class="form-group">  
+              <div class="form-label">Pages</div>
+                  <div class="modal-scroll" >
+                    <form>  
+                      <input type="file" class="form-control" style="width: 50%;" id="ChooseImage"  multiple><br><br>
+                      
+                    </form>  
+                    
+                  </div>
+                      
+            </div>
+          </form>
+        </div>
+  
+        <div class="modal-footer">
+          <span type="button" name="submit" id="submit" class="btn btn-primary">Create Chapter</span>
+          <span  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</span>
+        </div>
+
+  </div>

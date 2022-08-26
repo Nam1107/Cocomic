@@ -1,0 +1,93 @@
+
+ <script>
+$(document).ready(function() {
+console.log(getComic);
+$.ajax({  
+        url: ROOT + "/server/controllers/pages.php",
+        type: 'get',
+        async: false,
+        data: {
+        'chapter-id':getChapter,
+        'order-by': 'DESC',
+        },
+        success:function(data)  
+        {  
+            var obj = JSON.parse(data);
+            if(obj.length) {
+              FieldCount = parseInt(obj[0].Page)+1;
+            }else{
+              FieldCount = 1;
+            }
+            $('#Page').val(FieldCount);
+        }  
+});
+
+ $('#submit').click(async function(){            
+  var data = {
+          'add-page' : getChapter,
+      }
+      $("#loading_anim").html(
+                  `
+                  <div style="font-size:30px">Loading...</div>
+                  `
+                );
+        $("#loading").show();
+        var fileImg = document.getElementById('ChooseImage').files;
+        var newPage = $('#Page').val();
+        for(var i=0;i<fileImg.length;i++){
+          data[`obj[${i}][Page]`] = newPage;
+          data[`obj[${i}][PageImgURL]`] = await upload(fileImg[i],getComic+'/'+getChapterNum);
+          newPage++;
+        }
+        $("#loading_anim").html(
+                  `
+                  <div style="font-size:30px">Success</div>
+                  `
+                );
+
+        setTimeout(function() {
+          $("#loading").hide();
+                
+            },500);
+      $.post( ROOT + "/server/controllers/pages.php",data, function(data){
+        GetChapterDetail();
+        GetListPage();
+      });
+      $('#myModal').modal('hide');
+      }); 
+});
+
+</script>
+<div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title text-title">CREATE NEW PAGES</h4>
+        <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form2">
+            <div class="form-group">  
+              <div class="row">
+                <span class="form-label col-1" style="align-self: center;">Pages</span>
+              <span class="col-2"><input type="number" placeholder="Page" id="Page" class="form-control name_list" readonly /></span>
+              </div>
+              <p></p>
+              <div class="modal-scroll" >
+                <form>  
+                  <input type="file" class="form-control" style="width: 50%;" id="ChooseImage"  multiple><br><br>
+                  
+                </form>  
+                
+              </div>
+                  <input type="button" name="submit" id="submit" class="btn btn-success" value="Submit" />  
+            </div>  
+          </div>
+        </form>
+      
+
+      <div class="modal-footer">
+        <button  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+      <div id="modalContent">
+
+      </div>
+</div>

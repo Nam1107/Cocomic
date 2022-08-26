@@ -1,0 +1,97 @@
+
+<script>
+    $(document).ready(function(){
+      $.ajax({  
+        url: ROOT + "/server/controllers/pages.php",
+        type: 'get',
+        async: false,
+        data: {
+          'page-id': pagePick,
+        },
+        success:function(data)  
+        {  
+          var obj = JSON.parse(data);
+          $('#Page').val(obj.Page);
+          $('#PageImgURL').val(obj.PageImgURL);
+
+        }  
+      });
+
+      
+      $("#Update-page").click(async function(){
+          var data = {
+          'update-page':pagePick,
+          'Page':$('#Page').val(),
+          }
+
+          $("#loading_anim").html(
+            `
+            <div style="font-size:30px">Loading...</div>
+            `
+          );
+        $("#loading").show();
+        var fileImg = document.getElementById('ChooseImage').files;
+        var img = await upload(fileImg[0],getComic+'/'+getChapterNum);
+
+          if(img != null){
+            data['PageImgURL'] = img;
+          }else {
+            data['PageImgURL'] = $('#PageImgURL').val();
+          }
+        $("#loading_anim").html(
+                  `
+                  <div style="font-size:30px">Success</div>
+                  `
+                );
+
+        setTimeout(function() {
+          $("#loading").hide();
+                
+            },500);
+          UpdatePage(data);
+      })
+    });
+    function UpdatePage(updatePage){
+    $.ajax({  
+    url: ROOT + "/server/controllers/pages.php",
+    type: 'put',
+    data: updatePage,
+    success:function(data)  
+    {  
+      GetChapterDetail();
+      GetListPage();
+    }  
+  });
+  }
+</script>
+<div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title text-title">EDIT PAGE</h4>
+        <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <form id="form2">
+          <div class="row">
+            <span class="form-label col-1" style="align-self: center;">Pages</span>
+          <span class="col-2"><input type="number" placeholder="Page" id="Page" class="form-control name_list"/></span>
+          </div>
+          <p></p>
+          <div class="modal-scroll" >
+            <form>  
+              <input type="file" class="form-control" style="width: 50%;" id="ChooseImage"><br><br>
+              <input type="text" id="PageImgURL"  class="form-control" placeholder="PageImgURL" readonly/>
+              
+            </form>  
+            
+          </div>
+          <input id="Update-page" type="button"  class="btn btn-primary" data-bs-dismiss="modal" value="Update">
+
+            
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+</div>

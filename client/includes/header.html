@@ -1,0 +1,128 @@
+<header>
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/cocomic/client/homepage/index.html">
+            COCOMIC
+        </a>
+      </div>
+
+      <ul class="nav navbar-nav navbar-right">
+        <div class="avatarHidden">
+
+        </div>
+        
+      </ul>
+    </div>
+  </nav>
+  <div class="nav-list">
+    <ul>
+      <li>
+        <a href="/cocomic/client/homepage/index.html">HOME</a>
+      </li>
+      <li>
+        <a href="/cocomic/client/homepage/genres.html?order=LastUpdate">LATEST</a>
+      </li>
+      <li>
+        <a href="/cocomic/client/homepage/genres.html?order=CreateDate">NEWEST</a>
+      </li>
+      <li>
+        <a href="/cocomic/client/homepage/genres.html?order=ViewNo">POPULAR</a>
+      </li>
+      <li>
+        <a href="/cocomic/client/homepage/search.html">SEARCH</a>
+      </li>
+    </ul>
+
+  </div>
+</header>
+
+
+<script>
+  $(document).ready(function(){
+    if(statusAuth=='user'){
+          $('.avatarHidden').html(
+            `
+            <div class="dropdown" style="margin-left:50px">
+              <div  type="button" style="width: 100%;" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-bell-fill" viewBox="0 0 16 16">
+                  <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/>
+                </svg>
+              </div>
+              <div class="dropdown-content" style="margin-right: -75px;">
+                <a href="#">No Notification Yet</a>
+              </div>
+            </div>
+            <div class="dropdown" ">
+              <div  type="button" style="width: 100%;" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-person-circle" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+                <span>${account.UserName}</span>
+              </div>
+              <div class="dropdown-content" style="margin-left: -75px;">
+                <a href="/cocomic/client/homepage/account/profile.html">Profile</a>
+                <a href="#" onclick="logout()">Log Out</a>
+              </div>
+            </div>
+            `
+          )
+    }
+    else if(statusAuth=='admin'){
+          $('.avatarHidden').html(
+            `
+            <div class="dropdown" style="margin-right:50px">
+              <div  type="button" style="width: 100%;" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-bell-fill" viewBox="0 0 16 16">
+                  <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/>
+                </svg>
+              </div>
+              <div class="dropdown-content" style="margin-left: -75px;">
+                <a href="#">No Notification Yet</a>
+              </div>
+            </div>
+            <div class="dropdown">
+              <div  type="button" style="width: 100%;" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-person-circle" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+                <span>${account.UserName}</span>
+              </div>
+              <div class="dropdown-content" style="margin-left: -75px;">
+                <a href="/cocomic/client/CMS/comics/index.html">Dashboard</a>
+                <a href="/cocomic/client/homepage/account/profile.html">Profile</a>
+                <a href="#" onclick="logout()">Log Out</a>
+              </div>
+            </div>
+            `
+          )
+    }
+    else if(statusAuth=='guest'){
+          $('.avatarHidden').html(
+            `
+            <div class="right">
+            <a href="/cocomic/client/auth/login.html">Sign In</a >
+
+              <a href="#">Sign Up</a >
+            </div>
+            `
+          )
+        }
+  
+})
+  function logout(){
+    $.ajax({  
+            url: ROOT + "/server/controllers/authen.php",
+            type: 'post',
+            data: {
+              'logout': 1,
+            },
+            success:function(data)  
+            {  
+              window.open(ROOT + "/client/auth/login.html","_self");
+            }  
+        });
+  }
+</script>

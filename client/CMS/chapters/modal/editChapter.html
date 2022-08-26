@@ -1,0 +1,84 @@
+<script>
+    $(document).ready(function(){
+      var comicID = 0;
+      $.ajax({  
+          url: ROOT + "/server/controllers/chapters.php",
+          type: 'get',
+          data: {
+            'chapter-id': getChapter,
+          },
+          success:function(data)  
+          {  
+            var obj = JSON.parse(data);
+            comicID = obj.Chapter.ComicID;
+            $('#ChapterNum').val(parseFloat(obj.Chapter.ChapterNum));
+            $('#ChapterID').val(obj.Chapter.ChapterID);
+            $('#ChapterName').val(obj.Chapter.ChapterName);
+          }  
+      });
+      $("#Update-chapter").click(function(){
+          var data = {
+          'update-chapter':$('#ChapterID').val(),
+          'ChapterNum':$('#ChapterNum').val(),
+          'ChapterName':$('#ChapterName').val(),
+          'ComicID':comicID,
+          }
+          if(!data['ChapterName']){
+            alert("Chapter Name is empty");
+            
+            }else{
+              $('#myModal').modal('hide');
+              UpdateChapter(data);
+            }
+          
+      })
+      $('#ChapterNum').change(function(){
+      var index =  $('#ChapterNum').val();
+      $('#ChapterName').val('Chapter '+index);
+    })
+  });
+  function UpdateChapter(updateChapter){
+    $.ajax({  
+    url: ROOT + "/server/controllers/chapters.php",
+    type: 'put',
+    data: updateChapter,
+    success:function(data)  
+    {  
+      GetChapterDetail();
+    }  
+  });
+  }
+</script>
+<div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title text-title">EDIT CHAPTER</h4>
+        <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form >
+        <div class="form-label">Chapter ID</div>
+          <div class="form-group mb-3">
+              <input type="text" id="ChapterID" class="form-control" name="ChapterID" value="" readonly/>
+          </div>
+          <div class="form-label">Chapter Name</div>
+          <div class="form-group mb-3">
+            <div class="row">
+              <div class="col-2">
+                <input type="number" id="ChapterNum" class="form-control" name="ChapterNum"  placeholder="Chapter Name"/>
+              </div>
+              
+              <div class="col-10">
+                <input type="text" id="ChapterName" class="form-control" name="ChapterName"  placeholder="Chapter Name"/>
+              </div>
+            </div>
+          </div>
+          <input id="Update-chapter" type="button"  class="btn btn-primary" value="Update">
+
+</div>
+        </form>
+      
+
+      <div class="modal-footer">
+        <button  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+</div>

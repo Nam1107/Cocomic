@@ -1,0 +1,106 @@
+
+ <script>
+    $(document).ready(function() {
+
+      $.ajax({  
+    url: ROOT + "/server/controllers/slider.php",
+    type: 'get',
+    async: false,
+    data: {
+      'banner':1,
+      'id': bannerPick,
+    },
+    success:function(data)  
+    {  
+      var obj =JSON.parse(data);
+      obj = obj.slider;
+      $('#TextBanner').val(obj.text);
+      $('#BannerImgURL').val(obj.image);
+    }  
+  });
+     
+     
+     $('#submit').click(async function(){            
+        var data = {
+            'update-banner': keyadmin,
+            'id': bannerPick,
+            'text': $('#TextBanner').val(),
+        }
+        $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Loading...</div>
+                    `
+                  );
+          $("#loading").show();
+        var fileImg = document.getElementById('ChooseImage').files;
+          var img = await upload(fileImg[0],'Banner');
+
+          if(img != null){
+            data[`image`] = img;
+          }else {
+            data[`image`] = $('#BannerImgURL').val();
+          }
+          $("#loading_anim").html(
+                    `
+                    <div style="font-size:30px">Success</div>
+                    `
+                  );
+  
+          setTimeout(function() {
+            $("#loading").hide();
+                  
+              },500);
+
+              $.ajax({  
+                url: ROOT + "/server/controllers/slider.php",
+                type: 'put',
+                async: false,
+                data: data,
+                success:function(data)  
+                {  
+
+                }  
+              });
+        GetListBanner();
+        $('#myModal').modal('hide');
+          }); 
+    });
+  
+    </script>
+    <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title text-title">EDIT BANNER</h4>
+            <button  type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formInput">
+            <div class="form-label">Text Banner</div>
+              <div class="form-group" >
+                <div class="row">
+                    <input type="text" id="TextBanner" class="form-control" name="TextBanner"  placeholder="Text Banner"/>
+                </div>
+                  
+                  
+              </div>
+              <br>
+                <div class="form-group">  
+                <div class="form-label">Banner Image URL</div>
+                    <div class="modal-scroll" >
+                      <form>  
+                        <input type="file" class="form-control" style="width: 50%;" id="ChooseImage" ><br><br>
+                        <input type="text" id="BannerImgURL"  class="form-control" placeholder="BannerImgURL" readonly/>
+                        
+                      </form>  
+                      
+                    </div>
+                        
+              </div>
+            </form>
+          </div>
+    
+          <div class="modal-footer">
+            <span type="button" name="submit" id="submit" class="btn btn-primary">Update</span>
+            <span  type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</span>
+          </div>
+  
+    </div>
